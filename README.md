@@ -81,42 +81,6 @@ An intelligent Streamlit application that analyzes code error screenshots and pr
    - Root Cause Analysis
    - Quick Tips or Corrected Code (depending on mode selected)
 
-## 🌐 Deploy to Streamlit Cloud
-
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit: DebugGenius - AI-powered code error analysis"
-   git push origin main
-   ```
-
-2. **Deploy via Streamlit Cloud**
-   - Go to [share.streamlit.io](https://share.streamlit.io)
-   - Click "New app"
-   - Connect your GitHub repository
-   - Select `main` branch and `app.py` as the main file
-   - Click "Deploy"
-
-3. **Configure API Key**
-   - In Streamlit Cloud app settings, go to "Secrets"
-   - Add: `GEMINI_API_KEY = your_api_key_here`
-   - The app will automatically use the secret
-
-4. **Your app is live!**
-   - Share the deployed URL with others
-
-## 📁 Project Structure
-
-```
-ai-code-debugger/
-├── app.py                 # Main Streamlit application
-├── requirements.txt       # Python dependencies
-├── .env.example          # Environment template
-├── .env                  # Local environment (not in repo)
-├── .gitignore            # Git ignore rules
-└── README.md             # This file
-```
-
 ## 🛠️ Technical Details
 
 ### Dependencies
@@ -176,20 +140,6 @@ The app auto-detects and supports:
 ## 📄 License
 
 This project is open source. Feel free to fork and contribute!
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📧 Support
-
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Check existing issues first
 
 ---
 
