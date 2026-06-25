@@ -120,7 +120,9 @@ class AppConfig:
             If the provider is unknown, or if Gemini is selected without a key.
         """
 
-        provider = os.getenv("AI_PROVIDER", _DEFAULT_PROVIDER).strip().lower()
+        # Every value resolves from environment / .env first, then st.secrets,
+        # so the same config works locally and on Streamlit Cloud.
+        provider = (_resolve_secret("AI_PROVIDER") or _DEFAULT_PROVIDER).strip().lower()
         if provider not in _VALID_PROVIDERS:
             raise ConfigurationError(
                 f"Unknown AI_PROVIDER '{provider}'.",
@@ -141,8 +143,8 @@ class AppConfig:
         return cls(
             provider=provider,
             api_key=api_key,
-            model_name=os.getenv("GEMINI_MODEL", _DEFAULT_GEMINI_MODEL),
-            ollama_host=os.getenv("OLLAMA_HOST", _DEFAULT_OLLAMA_HOST),
-            ollama_model=os.getenv("OLLAMA_MODEL", _DEFAULT_OLLAMA_MODEL),
+            model_name=_resolve_secret("GEMINI_MODEL") or _DEFAULT_GEMINI_MODEL,
+            ollama_host=_resolve_secret("OLLAMA_HOST") or _DEFAULT_OLLAMA_HOST,
+            ollama_model=_resolve_secret("OLLAMA_MODEL") or _DEFAULT_OLLAMA_MODEL,
             ollama_api_key=_resolve_secret("OLLAMA_API_KEY"),
         )

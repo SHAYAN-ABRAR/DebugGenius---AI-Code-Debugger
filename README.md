@@ -102,8 +102,28 @@ and typed errors that always surface an actionable hint.
 | `GEMINI_MODEL` | ❌ | `gemini-2.0-flash` | Override the Gemini model. |
 | `DEBUGGENIUS_LOG_LEVEL` | ❌ | `INFO` | Logging verbosity. |
 
-On **Streamlit Cloud**, use Gemini (`AI_PROVIDER=gemini`) and add `GEMINI_API_KEY`
-under *App → Settings → Secrets* — there's no Ollama server in that environment.
+Every value is read from the environment / `.env` first, then from `st.secrets`,
+so the same configuration works locally and on Streamlit Cloud.
+
+---
+
+## 🌐 Deploy to Streamlit Community Cloud
+
+1. Push the repo to GitHub (already done).
+2. Go to [share.streamlit.io](https://share.streamlit.io) → **Create app** → pick this
+   repo, branch `main`, main file `app.py`.
+3. Open **Advanced settings → Secrets** and paste (TOML):
+
+   ```toml
+   AI_PROVIDER   = "ollama"
+   OLLAMA_HOST   = "https://ollama.com"
+   OLLAMA_MODEL  = "gemma4:31b-cloud"
+   OLLAMA_API_KEY = "your_ollama_api_key"
+   ```
+
+   There is no local Ollama daemon in the cloud, so `OLLAMA_HOST` **must** point at
+   `https://ollama.com` and `OLLAMA_API_KEY` is required.
+4. Click **Deploy**. Never upload `.env` — secrets go only in the Secrets box.
 
 ---
 
