@@ -1,146 +1,116 @@
-# 🐛 DebugGenius - AI Code Debugger
+# 🐛 DebugGenius — AI Code Debugger
 
-An intelligent Streamlit application that analyzes code error screenshots and provides AI-powered debugging assistance using Google Gemini API.
+A premium, glassmorphism Streamlit app that analyzes **screenshots of code errors**
+and returns a structured explanation — error type, root cause, fix, and corrected
+code — powered by **Google Gemini Vision**.
 
-## ✨ Features
-
-- 📤 **Image Upload**: Upload screenshots of code errors (PNG, JPG, JPEG)
-- 🔍 **Two Debug Modes**:
-  - **Hints Mode**: Get error explanation and tips without code changes
-  - **Solution Mode**: Get error explanation + corrected code with full fix explanation
-- 🎨 **Professional Dark Theme**: Modern, sleek UI optimized for code analysis
-- ⚡ **Real-time Analysis**: Instant feedback using Google Gemini 2.0 Flash
-- 🔒 **Secure API Key Management**: Environment variables via `.env` file
-- 🌍 **Multi-language Support**: Auto-detects programming language from image
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.8+
-- Google Gemini API Key (get it from [Google AI Studio](https://aistudio.google.com/app/apikeys))
-
-### Local Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/debuggenius.git
-   cd debuggenius
-   ```
-
-2. **Create virtual environment**
-   ```bash
-   # Windows
-   python -m venv venv
-   venv\Scripts\activate
-   
-   # macOS/Linux
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure environment variables**
-   ```bash
-   # Copy .env.example to .env
-   cp .env.example .env
-   
-   # Edit .env and add your Gemini API key
-   # GEMINI_API_KEY=your_actual_api_key_here
-   ```
-
-5. **Run the app locally**
-   ```bash
-   streamlit run app.py
-   ```
-
-   The app will open at `http://localhost:8501`
-
-## 💻 How to Use
-
-1. **Upload Code Error Screenshot**
-   - Click "Choose an image file" in the sidebar
-   - Select a PNG, JPG, or JPEG image showing your code error
-   - Preview appears automatically
-
-2. **Select Debug Mode**
-   - Choose "Hints (Explanation Only)" for error explanation + tips
-   - Choose "Solution with Code" for complete fix with corrected code
-
-3. **Click Debug Code**
-   - Button triggers Gemini API analysis
-   - Spinner shows while analyzing
-   - Results display with formatted error analysis
-
-4. **Review Results**
-   - Error Type
-   - Error Explanation
-   - Root Cause Analysis
-   - Quick Tips or Corrected Code (depending on mode selected)
-
-## 🛠️ Technical Details
-
-### Dependencies
-- **streamlit**: Web app framework
-- **google-generativeai**: Gemini API client
-- **python-dotenv**: Environment variable management
-- **Pillow**: Image processing
-
-### API Model
-- **gemini-2.0-flash**: Fast vision model for error screenshot analysis
-
-### UI/UX
-- Dark theme with cyan (#00D9FF) and magenta (#FF006E) accent colors
-- Responsive layout with sidebar controls
-- Real-time image preview
-- Loading spinners and success/error messages
-
-## 🎯 Supported Programming Languages
-
-The app auto-detects and supports:
-- Python
-- JavaScript/TypeScript
-- Java
-- C/C++
-- C#
-- Ruby
-- PHP
-- Go
-- Rust
-- Swift
-- Kotlin
-- And many more...
-
-## ⚠️ Important Notes
-
-- **API Key Security**: Never commit `.env` to GitHub. It's in `.gitignore`.
-- **Image Quality**: Upload clear, readable screenshots for best results
-- **Rate Limits**: Gemini API has rate limits. Check your quota at [Google AI Studio](https://aistudio.google.com/app/usage)
-- **Supported Formats**: PNG, JPG, JPEG only
-
-## 🐛 Troubleshooting
-
-### "GEMINI_API_KEY not found"
-- Make sure `.env` file exists in the project root
-- Add your Gemini API key to `.env`: `GEMINI_API_KEY=your_key_here`
-
-### "Error analyzing image"
-- Upload a clearer screenshot
-- Ensure the image actually shows code
-- Check your Gemini API rate limit
-
-### App won't start locally
-- Check Python version (3.8+ required)
-- Verify virtual environment is activated
-- Run `pip install -r requirements.txt` again
-
-## 📄 License
-
-This project is open source. Feel free to fork and contribute!
+> Drop in a screenshot of any stack trace or error and get a streaming, copy-ready
+> answer in seconds.
 
 ---
 
-**Made with ❤️ | DebugGenius - Your AI Debugging Partner**
+## ✨ Features
+
+- 🖼️ **Screenshot in** — PNG / JPG / WEBP of an error or stack trace.
+- 🎚️ **Two modes** — *Hints only* (guidance) or *Full solution* (corrected code).
+- ⚡ **Streaming answers** — the explanation renders token-by-token.
+- 📋 **One-click copy & export** — copy code blocks, download the whole answer as Markdown.
+- 🕑 **Session history** — revisit earlier analyses without re-running them.
+- 🎨 **Glassmorphism UI** — frosted panels, aurora backdrop, Inter type, micro-interactions.
+- 🛡️ **Robust** — typed errors, input validation, retries with backoff, friendly messages.
+
+---
+
+## 🚀 Quick start
+
+```bash
+# 1. Create & activate a virtual environment
+python -m venv venv
+venv\Scripts\activate         # Windows
+# source venv/bin/activate    # macOS / Linux
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Configure your API key
+copy .env.example .env        # Windows  (cp on macOS/Linux)
+#   then edit .env and set GEMINI_API_KEY
+
+# 4. Run
+streamlit run app.py
+```
+
+The app opens at <http://localhost:8501>.
+Get a free key from [Google AI Studio](https://aistudio.google.com/app/apikeys).
+
+---
+
+## 🧱 Architecture
+
+A thin entrypoint (`app.py`) orchestrates a small, single-responsibility package:
+
+```
+AI Code Debugger App/
+├── app.py                     # Entrypoint: page config + orchestration only
+├── debuggenius/
+│   ├── config.py              # Immutable settings + secret resolution (.env / st.secrets)
+│   ├── models.py              # Typed domain models (DebugMode, DebugRequest, HistoryEntry)
+│   ├── exceptions.py          # Typed error hierarchy with user-facing hints
+│   ├── validation.py          # Pure, testable image validation
+│   ├── prompts.py             # Single source of truth for model prompts
+│   ├── ai_service.py          # Gemini wrapper: streaming + retries + error mapping
+│   ├── theme.py               # Glassmorphism design system (injected CSS)
+│   ├── state.py               # Session-state + bounded history
+│   ├── ui.py                  # Reusable presentation components
+│   └── logging_setup.py       # Centralized logging
+├── tests/                     # Unit tests (validation, prompts, models, config)
+├── .streamlit/config.toml     # Base dark theme to match the CSS
+├── requirements.txt           # Runtime dependencies
+└── requirements-dev.txt       # + pytest
+```
+
+**Design principles:** separation of concerns, dependency direction inward
+(UI → core → models), no framework imports in the testable core, DRY prompts,
+and typed errors that always surface an actionable hint.
+
+---
+
+## ⚙️ Configuration
+
+| Variable | Required | Default | Purpose |
+|----------|----------|---------|---------|
+| `GEMINI_API_KEY` | ✅ | — | Gemini API key (`.env` locally or Streamlit secrets in the cloud). |
+| `GEMINI_MODEL` | ❌ | `gemini-2.0-flash` | Override the vision model. |
+| `DEBUGGENIUS_LOG_LEVEL` | ❌ | `INFO` | Logging verbosity. |
+
+On **Streamlit Cloud**, add `GEMINI_API_KEY` under *App → Settings → Secrets*
+instead of committing a `.env` file.
+
+---
+
+## 🧪 Testing
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+The core logic (validation, prompts, models, config) is unit-tested without any
+network or Streamlit runtime.
+
+---
+
+## 🔒 Security notes
+
+- `.env` is git-ignored — never commit your key. If a key was ever committed, **rotate it**.
+- Uploads are validated for type, size, dimensions, and decodability before any API call.
+
+---
+
+## 📄 License
+
+Open source — fork and contribute.
+
+---
+
+**Made with ❤️ — DebugGenius, your AI debugging partner.**

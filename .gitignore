@@ -40,5 +40,8 @@ env/
 *~
 .DS_Store
 
-# Streamlit
-.streamlit/
+# Streamlit — keep config.toml in the repo, ignore local secrets only
+.streamlit/secrets.toml
+
+# Tests / tooling
+.pytest_cache/

@@ -1,0 +1,15 @@
+# Base theme so Streamlit's own widgets match the injected glassmorphism CSS.
+[theme]
+base = "dark"
+primaryColor = "#6C63FF"
+backgroundColor = "#07070d"
+secondaryBackgroundColor = "#0d0d18"
+textColor = "#f4f5fb"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[server]
+# Don't auto-open a browser tab when running headless / on a server.
+headless = true
