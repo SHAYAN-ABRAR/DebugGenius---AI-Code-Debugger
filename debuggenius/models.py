@@ -1,6 +1,6 @@
 """Typed domain models shared across layers.
 
-Keeping these as plain dataclasses / enums (no Streamlit or Gemini imports)
+Keeping these as plain dataclasses / enums (no Streamlit or Ollama imports)
 makes the core logic trivially unit-testable.
 """
 
@@ -36,15 +36,6 @@ class DebugMode(Enum):
             DebugMode.SOLUTION: "Everything in Hints plus corrected, ready-to-paste code.",
         }[self]
 
-    @classmethod
-    def from_label(cls, label: str) -> "DebugMode":
-        """Resolve a mode from its display label (used by the radio widget)."""
-
-        for mode in cls:
-            if mode.label == label:
-                return mode
-        raise ValueError(f"Unknown debug mode label: {label!r}")
-
 
 @dataclass(frozen=True, slots=True)
 class DebugRequest:
@@ -63,7 +54,6 @@ class HistoryEntry:
     filename: str
     mode: DebugMode
     response: str
-    thumbnail_b64: str | None = None
     entry_id: str = field(default_factory=lambda: uuid.uuid4().hex[:8])
     created_at: float = field(default_factory=time.time)
 

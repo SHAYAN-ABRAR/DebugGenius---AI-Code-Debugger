@@ -2,8 +2,10 @@
 
 Talks to a running Ollama server over its HTTP API using only the standard
 library (no extra dependency). Supports vision models via the ``images`` field,
-streaming NDJSON responses, bounded retries, and friendly error mapping —
-mirroring the :class:`~debuggenius.ai_service.GeminiDebugger` interface.
+streaming NDJSON responses, bounded retries, and friendly error mapping.
+
+Works against a local daemon (``http://localhost:11434``) or, for deployment,
+the remote ``https://ollama.com`` endpoint with an API key.
 """
 
 from __future__ import annotations

@@ -1,8 +1,8 @@
 # 🐛 DebugGenius — AI Code Debugger
 
-A premium, glassmorphism Streamlit app that analyzes **screenshots of code errors**
-and returns a structured explanation — error type, root cause, fix, and corrected
-code. Runs on a **local/Cloud Ollama** vision model (default) or **Google Gemini**.
+A premium, glassmorphism Streamlit app that reads **screenshots of code errors**
+and returns a structured fix — error type, plain-English meaning, root cause, and
+corrected code — streamed live from an **Ollama vision model**.
 
 > Drop in a screenshot of any stack trace or error and get a streaming, copy-ready
 > answer in seconds.
@@ -14,11 +14,10 @@ code. Runs on a **local/Cloud Ollama** vision model (default) or **Google Gemini
 - 🖼️ **Screenshot in** — PNG / JPG / WEBP of an error or stack trace.
 - 🎚️ **Two modes** — *Hints only* (guidance) or *Full solution* (corrected code).
 - ⚡ **Streaming answers** — the explanation renders token-by-token.
-- 📋 **One-click copy & export** — copy code blocks, download the whole answer as Markdown.
+- 📋 **Copy & export** — copy code blocks, download the whole answer as Markdown.
 - 🕑 **Session history** — revisit earlier analyses without re-running them.
 - 🎨 **Glassmorphism UI** — frosted panels, aurora backdrop, Inter type, micro-interactions.
 - 🛡️ **Robust** — typed errors, input validation, retries with backoff, friendly messages.
-- 🔌 **Pluggable backend** — switch between Ollama and Gemini with one env var.
 
 ---
 
@@ -33,7 +32,7 @@ venv\Scripts\activate         # Windows
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Configure
+# 3. Configure (optional for a local daemon)
 copy .env.example .env        # Windows  (cp on macOS/Linux)
 
 # 4. Run
@@ -42,20 +41,26 @@ streamlit run app.py
 
 The app opens at <http://localhost:8501>.
 
-### Backends
+### You need an Ollama vision model
 
-**Ollama (default)** — needs a running [Ollama](https://ollama.com) server with a
-**vision** model. The default is `gemma4:31b-cloud` (a Cloud model — run
-`ollama signin` once). Any vision model works (e.g. `llava`, `minicpm-v`,
-`moondream`); set `OLLAMA_MODEL`. No API key required.
+DebugGenius talks to [Ollama](https://ollama.com). The default model is the
+vision model `gemma4:31b-cloud`. Any vision model works (e.g. `llava`,
+`minicpm-v`, `moondream`) — set `OLLAMA_MODEL`.
 
 ```bash
 ollama pull gemma4:31b-cloud   # or your preferred vision model
-ollama signin                  # only for "-cloud" models
+ollama signin                  # only required for "-cloud" models
 ```
 
-**Gemini** — set `AI_PROVIDER=gemini` and add `GEMINI_API_KEY`
-(get one from [Google AI Studio](https://aistudio.google.com/app/apikeys)).
+**Local daemon** (default): no key needed — `ollama signin` authenticates the
+daemon and it proxies cloud models for you.
+
+**Remote / deployed** (no local daemon): point at the cloud endpoint and pass a key:
+
+```bash
+OLLAMA_HOST=https://ollama.com
+OLLAMA_API_KEY=your_ollama_api_key
+```
 
 ---
 
@@ -72,8 +77,6 @@ AI Code Debugger App/
 │   ├── exceptions.py          # Typed error hierarchy with user-facing hints
 │   ├── validation.py          # Pure, testable image validation
 │   ├── prompts.py             # Single source of truth for model prompts
-│   ├── provider.py            # AIProvider protocol shared by every backend
-│   ├── ai_service.py          # Gemini wrapper: streaming + retries + error mapping
 │   ├── ollama_service.py      # Ollama wrapper: streaming + retries + error mapping
 │   ├── theme.py               # Glassmorphism design system (injected CSS)
 │   ├── state.py               # Session-state + bounded history
@@ -81,49 +84,50 @@ AI Code Debugger App/
 │   └── logging_setup.py       # Centralized logging
 ├── tests/                     # Unit tests (validation, prompts, models, config, ollama)
 ├── .streamlit/config.toml     # Base dark theme to match the CSS
-├── requirements.txt           # Runtime dependencies
+├── requirements.txt           # Runtime dependencies (no AI vendor SDK — stdlib HTTP)
 └── requirements-dev.txt       # + pytest
 ```
 
 **Design principles:** separation of concerns, dependency direction inward
 (UI → core → models), no framework imports in the testable core, DRY prompts,
-and typed errors that always surface an actionable hint.
+typed errors that always surface an actionable hint, and zero AI-vendor SDK
+(the Ollama client is plain `urllib`).
 
 ---
 
 ## ⚙️ Configuration
 
+Every value resolves from the environment / `.env` first, then `st.secrets`, so the
+same configuration works locally and on Streamlit Cloud.
+
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
-| `AI_PROVIDER` | ❌ | `ollama` | Backend to use: `ollama` or `gemini`. |
-| `OLLAMA_HOST` | ❌ | `http://localhost:11434` | Ollama server URL. |
+| `OLLAMA_HOST` | ❌ | `http://localhost:11434` | Ollama server URL (`https://ollama.com` for remote). |
 | `OLLAMA_MODEL` | ❌ | `gemma4:31b-cloud` | Ollama **vision** model. |
-| `GEMINI_API_KEY` | ⚠️ | — | Required only when `AI_PROVIDER=gemini`. |
-| `GEMINI_MODEL` | ❌ | `gemini-2.0-flash` | Override the Gemini model. |
+| `OLLAMA_API_KEY` | ⚠️ | — | Required only for the remote `https://ollama.com` endpoint. |
 | `DEBUGGENIUS_LOG_LEVEL` | ❌ | `INFO` | Logging verbosity. |
-
-Every value is read from the environment / `.env` first, then from `st.secrets`,
-so the same configuration works locally and on Streamlit Cloud.
 
 ---
 
 ## 🌐 Deploy to Streamlit Community Cloud
 
-1. Push the repo to GitHub (already done).
+1. Push the repo to GitHub.
 2. Go to [share.streamlit.io](https://share.streamlit.io) → **Create app** → pick this
    repo, branch `main`, main file `app.py`.
 3. Open **Advanced settings → Secrets** and paste (TOML):
 
    ```toml
-   AI_PROVIDER   = "ollama"
-   OLLAMA_HOST   = "https://ollama.com"
-   OLLAMA_MODEL  = "gemma4:31b-cloud"
+   OLLAMA_HOST    = "https://ollama.com"
+   OLLAMA_MODEL   = "gemma4:31b-cloud"
    OLLAMA_API_KEY = "your_ollama_api_key"
    ```
 
    There is no local Ollama daemon in the cloud, so `OLLAMA_HOST` **must** point at
    `https://ollama.com` and `OLLAMA_API_KEY` is required.
 4. Click **Deploy**. Never upload `.env` — secrets go only in the Secrets box.
+
+> ⚠️ A public app uses *your* API key, so visitors spend your Ollama quota. Restrict
+> viewers in the app settings if that's a concern.
 
 ---
 
@@ -134,14 +138,14 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-The core logic (validation, prompts, models, config) is unit-tested without any
-network or Streamlit runtime.
+The core logic (validation, prompts, models, config, Ollama payload/auth) is
+unit-tested without any network or Streamlit runtime.
 
 ---
 
 ## 🔒 Security notes
 
-- `.env` is git-ignored — never commit your key. If a key was ever committed, **rotate it**.
+- `.env` is git-ignored — never commit keys. If a key was ever exposed, **rotate it**.
 - Uploads are validated for type, size, dimensions, and decodability before any API call.
 
 ---

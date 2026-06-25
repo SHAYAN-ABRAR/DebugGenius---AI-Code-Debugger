@@ -31,7 +31,7 @@ class SidebarSelections:
 # ─────────────────────────────  Hero  ──────────────────────────────
 
 
-def render_hero(engine_label: str = "AI Vision") -> None:
+def render_hero(engine_label: str = "Ollama Vision") -> None:
     st.markdown(
         f"""
         <div class="dg-hero">
@@ -159,10 +159,6 @@ def skeleton_html() -> str:
     """
 
 
-def render_skeleton() -> None:
-    st.markdown(f'<div class="dg-card">{skeleton_html()}</div>', unsafe_allow_html=True)
-
-
 def result_card_header(entry_mode: DebugMode, filename: str) -> None:
     st.markdown(
         f"#### ✅ Analysis · {entry_mode.icon} {entry_mode.label} "
@@ -209,18 +205,6 @@ def render_app_error(error: DebugGeniusError) -> None:
     st.error(f"**{error.message}**")
     if error.hint:
         st.info(f"💡 {error.hint}")
-
-
-def render_config_error(error: DebugGeniusError) -> None:
-    """Full-page configuration error (shown when the app can't start)."""
-
-    render_hero()
-    st.markdown("###")
-    with st.container(border=True):
-        st.error(f"**{error.message}**")
-        if error.hint:
-            st.info(f"💡 {error.hint}")
-        st.code("GEMINI_API_KEY=your_api_key_here", language="bash")
 
 
 # ───────────────────────────  Footer  ──────────────────────────────

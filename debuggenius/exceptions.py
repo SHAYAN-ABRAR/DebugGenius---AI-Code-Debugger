@@ -28,20 +28,12 @@ class DebugGeniusError(Exception):
         return self.message
 
 
-class ConfigurationError(DebugGeniusError):
-    """Raised when required configuration (e.g. the API key) is missing."""
-
-
 class ValidationError(DebugGeniusError):
     """Raised when an uploaded file fails validation."""
 
 
 class AIServiceError(DebugGeniusError):
     """Raised when the AI provider call fails after retries."""
-
-
-class RateLimitError(AIServiceError):
-    """Raised when the AI provider reports a quota / rate-limit error."""
 
 
 class NetworkError(AIServiceError):

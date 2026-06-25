@@ -13,9 +13,7 @@ from debuggenius.validation import validate_image
 
 
 def _config(**overrides) -> AppConfig:
-    base = dict(api_key="test-key")
-    base.update(overrides)
-    return AppConfig(**base)
+    return AppConfig(**overrides)
 
 
 def _png_bytes(size=(64, 48), color=(20, 20, 30)) -> bytes:

@@ -13,13 +13,11 @@ from __future__ import annotations
 import streamlit as st
 
 from debuggenius import ui
-from debuggenius.ai_service import GeminiDebugger
-from debuggenius.config import PROVIDER_OLLAMA, AppConfig
-from debuggenius.exceptions import ConfigurationError, DebugGeniusError
+from debuggenius.config import AppConfig
+from debuggenius.exceptions import DebugGeniusError
 from debuggenius.logging_setup import get_logger
 from debuggenius.models import DebugRequest, HistoryEntry
 from debuggenius.ollama_service import OllamaDebugger
-from debuggenius.provider import AIProvider
 from debuggenius.state import add_history, get_last_result, init_state
 from debuggenius.theme import apply_theme
 from debuggenius.validation import validate_image
@@ -33,28 +31,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-
-@st.cache_resource(show_spinner=False)
-def _build_gemini(
-    api_key: str,
-    model_name: str,
-    temperature: float,
-    timeout: int,
-    retries: int,
-    backoff: float,
-) -> GeminiDebugger:
-    """Cache the Gemini client across reruns (keyed on primitive settings)."""
-
-    config = AppConfig(
-        api_key=api_key,
-        model_name=model_name,
-        temperature=temperature,
-        request_timeout=timeout,
-        max_retries=retries,
-        retry_backoff_seconds=backoff,
-    )
-    return GeminiDebugger(config)
 
 
 @st.cache_resource(show_spinner=False)
@@ -80,31 +56,22 @@ def _build_ollama(
     )
 
 
-def get_debugger(config: AppConfig) -> AIProvider:
-    """Return the cached client for the configured provider."""
+def get_debugger(config: AppConfig) -> OllamaDebugger:
+    """Return the cached Ollama client for the current configuration."""
 
-    if config.provider == PROVIDER_OLLAMA:
-        return _build_ollama(
-            config.ollama_host,
-            config.ollama_model,
-            config.temperature,
-            config.request_timeout,
-            config.max_retries,
-            config.retry_backoff_seconds,
-            config.ollama_api_key,
-        )
-    return _build_gemini(
-        config.api_key,
-        config.model_name,
+    return _build_ollama(
+        config.ollama_host,
+        config.ollama_model,
         config.temperature,
         config.request_timeout,
         config.max_retries,
         config.retry_backoff_seconds,
+        config.ollama_api_key,
     )
 
 
 def run_analysis(
-    debugger: AIProvider, config: AppConfig, selections: ui.SidebarSelections
+    debugger: OllamaDebugger, config: AppConfig, selections: ui.SidebarSelections
 ) -> None:
     """Validate the upload, stream the model's answer, and persist the result."""
 
@@ -162,19 +129,8 @@ def main() -> None:
     apply_theme()
     init_state()
 
-    # Resolve configuration; without an API key the app can't run.
-    try:
-        config = AppConfig.load()
-    except ConfigurationError as exc:
-        ui.render_config_error(exc)
-        st.stop()
-        return  # for type-checkers; st.stop raises
-
-    engine_label = (
-        f"Ollama · {config.ollama_model}"
-        if config.provider == PROVIDER_OLLAMA
-        else f"Gemini · {config.model_name}"
-    )
+    config = AppConfig.load()
+    engine_label = f"Ollama · {config.ollama_model}"
 
     ui.render_hero(engine_label)
     st.markdown("")  # vertical breathing room

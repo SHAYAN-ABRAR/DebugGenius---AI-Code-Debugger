@@ -2,19 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
 from debuggenius.models import DebugMode, HistoryEntry
-
-
-def test_mode_label_roundtrip():
-    for mode in DebugMode:
-        assert DebugMode.from_label(mode.label) is mode
-
-
-def test_mode_from_unknown_label_raises():
-    with pytest.raises(ValueError):
-        DebugMode.from_label("does-not-exist")
 
 
 def test_mode_metadata_present():
