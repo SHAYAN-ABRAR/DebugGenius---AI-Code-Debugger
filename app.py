@@ -14,10 +14,12 @@ import streamlit as st
 
 from debuggenius import ui
 from debuggenius.ai_service import GeminiDebugger
-from debuggenius.config import AppConfig
+from debuggenius.config import PROVIDER_OLLAMA, AppConfig
 from debuggenius.exceptions import ConfigurationError, DebugGeniusError
 from debuggenius.logging_setup import get_logger
 from debuggenius.models import DebugRequest, HistoryEntry
+from debuggenius.ollama_service import OllamaDebugger
+from debuggenius.provider import AIProvider
 from debuggenius.state import add_history, get_last_result, init_state
 from debuggenius.theme import apply_theme
 from debuggenius.validation import validate_image
@@ -34,7 +36,7 @@ st.set_page_config(
 
 
 @st.cache_resource(show_spinner=False)
-def _build_debugger(
+def _build_gemini(
     api_key: str,
     model_name: str,
     temperature: float,
@@ -55,8 +57,43 @@ def _build_debugger(
     return GeminiDebugger(config)
 
 
-def get_debugger(config: AppConfig) -> GeminiDebugger:
-    return _build_debugger(
+@st.cache_resource(show_spinner=False)
+def _build_ollama(
+    host: str,
+    model: str,
+    temperature: float,
+    timeout: int,
+    retries: int,
+    backoff: float,
+    api_key: str | None,
+) -> OllamaDebugger:
+    """Cache the Ollama client across reruns (keyed on primitive settings)."""
+
+    return OllamaDebugger(
+        host=host,
+        model=model,
+        temperature=temperature,
+        timeout=timeout,
+        max_retries=retries,
+        retry_backoff_seconds=backoff,
+        api_key=api_key,
+    )
+
+
+def get_debugger(config: AppConfig) -> AIProvider:
+    """Return the cached client for the configured provider."""
+
+    if config.provider == PROVIDER_OLLAMA:
+        return _build_ollama(
+            config.ollama_host,
+            config.ollama_model,
+            config.temperature,
+            config.request_timeout,
+            config.max_retries,
+            config.retry_backoff_seconds,
+            config.ollama_api_key,
+        )
+    return _build_gemini(
         config.api_key,
         config.model_name,
         config.temperature,
@@ -67,7 +104,7 @@ def get_debugger(config: AppConfig) -> GeminiDebugger:
 
 
 def run_analysis(
-    debugger: GeminiDebugger, config: AppConfig, selections: ui.SidebarSelections
+    debugger: AIProvider, config: AppConfig, selections: ui.SidebarSelections
 ) -> None:
     """Validate the upload, stream the model's answer, and persist the result."""
 
@@ -108,7 +145,7 @@ def run_analysis(
         full_text = "".join(chunks).strip()
         if not full_text:
             placeholder.empty()
-            st.warning("Gemini returned an empty response. Please try again.")
+            st.warning("The model returned an empty response. Please try again.")
             return
 
         placeholder.markdown(full_text)  # final render, without the cursor
@@ -133,7 +170,13 @@ def main() -> None:
         st.stop()
         return  # for type-checkers; st.stop raises
 
-    ui.render_hero()
+    engine_label = (
+        f"Ollama · {config.ollama_model}"
+        if config.provider == PROVIDER_OLLAMA
+        else f"Gemini · {config.model_name}"
+    )
+
+    ui.render_hero(engine_label)
     st.markdown("")  # vertical breathing room
 
     selections = ui.render_sidebar(config)
@@ -147,7 +190,7 @@ def main() -> None:
     else:
         ui.render_empty_state()
 
-    ui.render_footer()
+    ui.render_footer(engine_label)
 
 
 if __name__ == "__main__":

@@ -31,11 +31,11 @@ class SidebarSelections:
 # ─────────────────────────────  Hero  ──────────────────────────────
 
 
-def render_hero() -> None:
+def render_hero(engine_label: str = "AI Vision") -> None:
     st.markdown(
         f"""
         <div class="dg-hero">
-          <span class="dg-hero__badge">⚡ Gemini Vision</span>
+          <span class="dg-hero__badge">⚡ {html.escape(engine_label)}</span>
           <h1 class="dg-hero__title">{APP_NAME}</h1>
           <p class="dg-hero__subtitle">
             Drop in a screenshot of any error or stack trace and get an instant,
@@ -226,12 +226,13 @@ def render_config_error(error: DebugGeniusError) -> None:
 # ───────────────────────────  Footer  ──────────────────────────────
 
 
-def render_footer() -> None:
+def render_footer(engine_label: str = "") -> None:
+    engine = f" · {html.escape(engine_label)}" if engine_label else ""
     st.markdown(
         f"""
         <div style="text-align:center;color:var(--dg-text-faint);
                     font-size:0.85rem;margin-top:3rem;">
-          {APP_NAME} · {APP_TAGLINE} · Built with Streamlit + Gemini
+          {APP_NAME} · {APP_TAGLINE}{engine}
         </div>
         """,
         unsafe_allow_html=True,

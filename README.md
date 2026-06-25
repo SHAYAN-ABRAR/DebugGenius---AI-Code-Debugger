@@ -2,7 +2,7 @@
 
 A premium, glassmorphism Streamlit app that analyzes **screenshots of code errors**
 and returns a structured explanation — error type, root cause, fix, and corrected
-code — powered by **Google Gemini Vision**.
+code. Runs on a **local/Cloud Ollama** vision model (default) or **Google Gemini**.
 
 > Drop in a screenshot of any stack trace or error and get a streaming, copy-ready
 > answer in seconds.
@@ -18,6 +18,7 @@ code — powered by **Google Gemini Vision**.
 - 🕑 **Session history** — revisit earlier analyses without re-running them.
 - 🎨 **Glassmorphism UI** — frosted panels, aurora backdrop, Inter type, micro-interactions.
 - 🛡️ **Robust** — typed errors, input validation, retries with backoff, friendly messages.
+- 🔌 **Pluggable backend** — switch between Ollama and Gemini with one env var.
 
 ---
 
@@ -32,16 +33,29 @@ venv\Scripts\activate         # Windows
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Configure your API key
+# 3. Configure
 copy .env.example .env        # Windows  (cp on macOS/Linux)
-#   then edit .env and set GEMINI_API_KEY
 
 # 4. Run
 streamlit run app.py
 ```
 
 The app opens at <http://localhost:8501>.
-Get a free key from [Google AI Studio](https://aistudio.google.com/app/apikeys).
+
+### Backends
+
+**Ollama (default)** — needs a running [Ollama](https://ollama.com) server with a
+**vision** model. The default is `gemma4:31b-cloud` (a Cloud model — run
+`ollama signin` once). Any vision model works (e.g. `llava`, `minicpm-v`,
+`moondream`); set `OLLAMA_MODEL`. No API key required.
+
+```bash
+ollama pull gemma4:31b-cloud   # or your preferred vision model
+ollama signin                  # only for "-cloud" models
+```
+
+**Gemini** — set `AI_PROVIDER=gemini` and add `GEMINI_API_KEY`
+(get one from [Google AI Studio](https://aistudio.google.com/app/apikeys)).
 
 ---
 
@@ -58,12 +72,14 @@ AI Code Debugger App/
 │   ├── exceptions.py          # Typed error hierarchy with user-facing hints
 │   ├── validation.py          # Pure, testable image validation
 │   ├── prompts.py             # Single source of truth for model prompts
+│   ├── provider.py            # AIProvider protocol shared by every backend
 │   ├── ai_service.py          # Gemini wrapper: streaming + retries + error mapping
+│   ├── ollama_service.py      # Ollama wrapper: streaming + retries + error mapping
 │   ├── theme.py               # Glassmorphism design system (injected CSS)
 │   ├── state.py               # Session-state + bounded history
 │   ├── ui.py                  # Reusable presentation components
 │   └── logging_setup.py       # Centralized logging
-├── tests/                     # Unit tests (validation, prompts, models, config)
+├── tests/                     # Unit tests (validation, prompts, models, config, ollama)
 ├── .streamlit/config.toml     # Base dark theme to match the CSS
 ├── requirements.txt           # Runtime dependencies
 └── requirements-dev.txt       # + pytest
@@ -79,12 +95,15 @@ and typed errors that always surface an actionable hint.
 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
-| `GEMINI_API_KEY` | ✅ | — | Gemini API key (`.env` locally or Streamlit secrets in the cloud). |
-| `GEMINI_MODEL` | ❌ | `gemini-2.0-flash` | Override the vision model. |
+| `AI_PROVIDER` | ❌ | `ollama` | Backend to use: `ollama` or `gemini`. |
+| `OLLAMA_HOST` | ❌ | `http://localhost:11434` | Ollama server URL. |
+| `OLLAMA_MODEL` | ❌ | `gemma4:31b-cloud` | Ollama **vision** model. |
+| `GEMINI_API_KEY` | ⚠️ | — | Required only when `AI_PROVIDER=gemini`. |
+| `GEMINI_MODEL` | ❌ | `gemini-2.0-flash` | Override the Gemini model. |
 | `DEBUGGENIUS_LOG_LEVEL` | ❌ | `INFO` | Logging verbosity. |
 
-On **Streamlit Cloud**, add `GEMINI_API_KEY` under *App → Settings → Secrets*
-instead of committing a `.env` file.
+On **Streamlit Cloud**, use Gemini (`AI_PROVIDER=gemini`) and add `GEMINI_API_KEY`
+under *App → Settings → Secrets* — there's no Ollama server in that environment.
 
 ---
 

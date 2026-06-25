@@ -108,6 +108,7 @@ class GeminiDebugger:
                 temperature=config.temperature
             ),
         )
+        self.engine_label = f"Gemini · {config.model_name}"
         logger.info("Initialised Gemini model '%s'.", config.model_name)
 
     # -- public API --------------------------------------------------------
