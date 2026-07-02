@@ -17,6 +17,7 @@ from debuggenius.config import AppConfig
 from debuggenius.exceptions import DebugGeniusError
 from debuggenius.logging_setup import get_logger
 from debuggenius.models import DebugRequest, HistoryEntry
+from debuggenius.motion import mount_motion
 from debuggenius.ollama_service import OllamaDebugger
 from debuggenius.state import add_history, get_last_result, init_state
 from debuggenius.theme import apply_theme
@@ -122,7 +123,7 @@ def run_analysis(
         add_history(entry, max_items=config.max_history_items)
         ui.render_result_actions(entry)
 
-    st.toast("Analysis complete", icon="✅")
+    st.toast("Analysis complete")
 
 
 def main() -> None:
@@ -147,6 +148,10 @@ def main() -> None:
         ui.render_empty_state()
 
     ui.render_footer(engine_label)
+
+    # Mounted last so the hidden iframe never adds a gap above content;
+    # its MutationObserver animates everything rendered before it anyway.
+    mount_motion()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,9 @@
+{
+  "name": "debuggenius",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Frontend tooling for DebugGenius (the app itself is Streamlit/Python)",
+  "dependencies": {
+    "framer-motion": "^12.42.2"
+  }
+}

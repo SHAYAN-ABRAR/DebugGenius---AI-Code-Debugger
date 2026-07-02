@@ -1,6 +1,6 @@
 # 🐛 DebugGenius — AI Code Debugger
 
-A premium, glassmorphism Streamlit app that reads **screenshots of code errors**
+A Streamlit app that reads **screenshots of code errors**
 and returns a structured fix — error type, plain-English meaning, root cause, and
 corrected code — streamed live from an **Ollama vision model**.
 
@@ -16,7 +16,8 @@ corrected code — streamed live from an **Ollama vision model**.
 - ⚡ **Streaming answers** — the explanation renders token-by-token.
 - 📋 **Copy & export** — copy code blocks, download the whole answer as Markdown.
 - 🕑 **Session history** — revisit earlier analyses without re-running them.
-- 🎨 **Glassmorphism UI** — frosted panels, aurora backdrop, Inter type, micro-interactions.
+- 🎨 **Glassmorphism UI** — dark frosted surfaces, aurora backdrop, violet→sky duotone, film grain.
+- 🎬 **Framer-motion animations** — staggered entrances and drifting orbs via the real `framer-motion` DOM bundle, bridged into Streamlit.
 - 🛡️ **Robust** — typed errors, input validation, retries with backoff, friendly messages.
 
 ---
@@ -79,6 +80,7 @@ AI Code Debugger App/
 │   ├── prompts.py             # Single source of truth for model prompts
 │   ├── ollama_service.py      # Ollama wrapper: streaming + retries + error mapping
 │   ├── theme.py               # Glassmorphism design system (injected CSS)
+│   ├── motion.py              # framer-motion bridge (animates the app's DOM)
 │   ├── state.py               # Session-state + bounded history
 │   ├── ui.py                  # Reusable presentation components
 │   └── logging_setup.py       # Centralized logging

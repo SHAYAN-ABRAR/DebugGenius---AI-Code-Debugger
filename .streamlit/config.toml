@@ -1,10 +1,11 @@
-# Base theme so Streamlit's own widgets match the injected glassmorphism CSS.
+# Base theme so Streamlit's own widgets match the injected glassmorphism CSS
+# (deep-space backdrop, violet→sky duotone).
 [theme]
 base = "dark"
-primaryColor = "#6C63FF"
-backgroundColor = "#07070d"
-secondaryBackgroundColor = "#0d0d18"
-textColor = "#f4f5fb"
+primaryColor = "#7C6CFF"
+backgroundColor = "#070810"
+secondaryBackgroundColor = "#0E1120"
+textColor = "#EEF0FA"
 font = "sans serif"
 
 [client]

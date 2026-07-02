@@ -9,6 +9,7 @@ The package is organized into small, single-responsibility modules:
 * :mod:`debuggenius.prompts`        – prompt construction (single source of truth).
 * :mod:`debuggenius.ollama_service` – Ollama client wrapper (streaming + retries).
 * :mod:`debuggenius.theme`          – the glassmorphism design system (CSS).
+* :mod:`debuggenius.motion`         – framer-motion animation bridge.
 * :mod:`debuggenius.state`          – Streamlit session-state management.
 * :mod:`debuggenius.ui`             – reusable presentation components.
 """

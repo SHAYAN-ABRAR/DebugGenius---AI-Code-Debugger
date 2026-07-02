@@ -2,6 +2,9 @@
 
 Each function renders one cohesive piece of the interface. Domain logic lives
 elsewhere — these functions only *render* (and read widget input).
+
+Elements tagged with ``data-dg-anim`` (and ``.dg-chip``) are picked up by the
+framer-motion bridge (:mod:`debuggenius.motion`) for entrance animations.
 """
 
 from __future__ import annotations
@@ -17,7 +20,7 @@ from .models import DebugMode, HistoryEntry
 from .state import clear_history, get_history
 
 APP_NAME = "DebugGenius"
-APP_TAGLINE = "AI-powered code-error analysis"
+APP_TAGLINE = "error analysis from screenshots"
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,21 +37,29 @@ class SidebarSelections:
 def render_hero(engine_label: str = "Ollama Vision") -> None:
     st.markdown(
         f"""
-        <div class="dg-hero">
-          <span class="dg-hero__badge">⚡ {html.escape(engine_label)}</span>
+        <div class="dg-hero" data-dg-anim="rise">
+          <span class="dg-hero__badge"><i></i>{html.escape(engine_label)}</span>
           <h1 class="dg-hero__title">{APP_NAME}</h1>
-          <p class="dg-hero__subtitle">
-            Drop in a screenshot of any error or stack trace and get an instant,
-            structured explanation — root cause, fix, and the corrected code.
+          <p class="dg-hero__lede">
+            Upload a screenshot of an error — a stack trace, compiler output,
+            a console full of red — and get back what broke, why it broke,
+            and how to fix it, streamed live from the model.
           </p>
           <div class="dg-features">
-            <span class="dg-chip">🧠 Any language</span>
-            <span class="dg-chip">🖼️ Screenshot in</span>
-            <span class="dg-chip">⚡ Streaming answers</span>
-            <span class="dg-chip">📋 One-click copy</span>
+            <span class="dg-chip">Any language</span>
+            <span class="dg-chip">Screenshot in, fix out</span>
+            <span class="dg-chip">Streaming answers</span>
+            <span class="dg-chip">Markdown export</span>
           </div>
         </div>
         """,
+        unsafe_allow_html=True,
+    )
+
+
+def _overline(number: str, title: str) -> None:
+    st.markdown(
+        f'<div class="dg-overline"><b>{number}</b>{html.escape(title)}</div>',
         unsafe_allow_html=True,
     )
 
@@ -60,9 +71,9 @@ def render_sidebar(config: AppConfig) -> SidebarSelections:
     """Render upload + mode controls and return the user's selections."""
 
     with st.sidebar:
-        st.markdown("### 📤 Upload error screenshot")
+        _overline("01", "Screenshot")
         uploaded_file = st.file_uploader(
-            "Drag a PNG/JPG/WEBP of your error here",
+            "Error screenshot",
             type=list(config.allowed_extensions),
             help="A clear screenshot of the error message or stack trace.",
             label_visibility="collapsed",
@@ -71,10 +82,11 @@ def render_sidebar(config: AppConfig) -> SidebarSelections:
         if uploaded_file is not None:
             st.image(uploaded_file, caption=uploaded_file.name, use_container_width=True)
 
-        st.markdown("### 🎚️ Debug mode")
-        options = {f"{m.icon}  {m.label}": m for m in DebugMode}
+        st.markdown("")
+        _overline("02", "Response depth")
+        options = {m.label: m for m in DebugMode}
         chosen_label = st.radio(
-            "Debug mode",
+            "Response depth",
             options=list(options.keys()),
             captions=[m.description for m in DebugMode],
             label_visibility="collapsed",
@@ -91,11 +103,16 @@ def _render_history_panel() -> None:
     if not history:
         return
 
-    st.markdown("### 🕑 This session")
-    for entry in history:
-        st.markdown(_history_item_html(entry), unsafe_allow_html=True)
+    st.markdown("")
+    _overline("03", "Session log")
+    st.markdown(
+        '<div class="dg-log">'
+        + "".join(_history_item_html(entry) for entry in history)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
 
-    if st.button("Clear history", use_container_width=True, key="dg_clear_history"):
+    if st.button("Clear log", use_container_width=True, key="dg_clear_history"):
         clear_history()
         st.rerun()
 
@@ -103,12 +120,13 @@ def _render_history_panel() -> None:
 def _history_item_html(entry: HistoryEntry) -> str:
     name = html.escape(entry.filename)
     return f"""
-    <div class="dg-history-item">
-      <div class="dg-history-item__top">
-        <span class="dg-history-item__name">{name}</span>
-        <span class="dg-history-item__time">{entry.created_label}</span>
+    <div>
+      <div class="dg-log__row">
+        <span class="dg-log__name" title="{name}">{name}</span>
+        <span class="dg-log__dots"></span>
+        <span class="dg-log__time">{entry.created_label}</span>
       </div>
-      <span class="dg-history-item__mode">{entry.mode.icon} {html.escape(entry.mode.label)}</span>
+      <span class="dg-log__mode">{html.escape(entry.mode.label.lower())}</span>
     </div>
     """
 
@@ -122,7 +140,7 @@ def render_primary_action(*, enabled: bool) -> bool:
     col_left, col_mid, col_right = st.columns([1, 2, 1])
     with col_mid:
         clicked = st.button(
-            "🚀 Analyze error" if enabled else "⬅ Upload a screenshot to start",
+            "Run analysis" if enabled else "Add a screenshot to begin",
             type="primary",
             use_container_width=True,
             disabled=not enabled,
@@ -137,10 +155,11 @@ def render_primary_action(*, enabled: bool) -> bool:
 def render_empty_state() -> None:
     st.markdown(
         """
-        <div class="dg-empty">
-          <div class="dg-empty__icon">🪄</div>
-          <div class="dg-empty__title">No analysis yet</div>
-          <div>Upload an error screenshot and hit <b>Analyze error</b> to begin.</div>
+        <div class="dg-empty" data-dg-anim="rise">
+          <div class="dg-empty__title">No runs yet</div>
+          <div>Add a screenshot in the left panel, choose how much help
+          you want back, then run the analysis.</div>
+          <div class="dg-empty__hint">accepts png · jpg · jpeg · webp</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -161,9 +180,13 @@ def skeleton_html() -> str:
 
 def result_card_header(entry_mode: DebugMode, filename: str) -> None:
     st.markdown(
-        f"#### ✅ Analysis · {entry_mode.icon} {entry_mode.label} "
-        f"<span style='color:var(--dg-text-faint);font-weight:400'>· "
-        f"{html.escape(filename)}</span>",
+        f"""
+        <div class="dg-result-head">
+          <span class="dg-result-head__title">Analysis</span>
+          <span class="dg-result-head__meta">{html.escape(entry_mode.label.lower())}
+          &nbsp;·&nbsp; {html.escape(filename)}</span>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
@@ -182,7 +205,7 @@ def render_static_result(entry: HistoryEntry) -> None:
 
 def _render_result_actions(entry: HistoryEntry) -> None:
     st.download_button(
-        "⬇️ Download as Markdown",
+        "Download as Markdown",
         data=entry.response,
         file_name=f"debuggenius-{entry.entry_id}.md",
         mime="text/markdown",
@@ -204,19 +227,19 @@ def render_app_error(error: DebugGeniusError) -> None:
 
     st.error(f"**{error.message}**")
     if error.hint:
-        st.info(f"💡 {error.hint}")
+        st.info(error.hint)
 
 
 # ───────────────────────────  Footer  ──────────────────────────────
 
 
 def render_footer(engine_label: str = "") -> None:
-    engine = f" · {html.escape(engine_label)}" if engine_label else ""
+    engine = html.escape(engine_label) if engine_label else "Ollama"
     st.markdown(
         f"""
-        <div style="text-align:center;color:var(--dg-text-faint);
-                    font-size:0.85rem;margin-top:3rem;">
-          {APP_NAME} · {APP_TAGLINE}{engine}
+        <div class="dg-footer">
+          <span>{APP_NAME} — {APP_TAGLINE}</span>
+          <span>{engine} · screenshots are analyzed in memory, never stored</span>
         </div>
         """,
         unsafe_allow_html=True,
